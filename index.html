@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>페리 산타 관제</title>
+<style>
+:root{--bg:#f4f1ec;--card:#fff;--ink:#2b2420;--mut:#7d7068;--line:#e5ddd2;--red:#e63946;--red2:#b5232f;--green:#1f9d76;--amber:#e9a23b;--blue:#3a7bd5;--soft:#faf6f0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:15px/1.5 "Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:8px 14px;background:#ece4d8;color:var(--ink)}
+button:hover{filter:brightness(.97)}button:disabled{opacity:.45;cursor:default}
+button.pri{background:var(--red);color:#fff}button.grn{background:var(--green);color:#fff}button.dng{background:#fbe3e1;color:var(--red2)}
+input,select,textarea{font:inherit;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;width:100%}
+input:focus,textarea:focus{outline:2px solid #e6394633;border-color:var(--red)}
+#top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-size:20px;font-weight:700}
+.badge{padding:3px 10px;border-radius:999px;font-size:13px;font-weight:700}
+.b-on{background:#e3f6ee;color:#12785a}.b-co{background:#fdeac8;color:#9a5d00}.b-demo{background:#e6ecff;color:#2f4fb3}.b-bad{background:#fde1e1;color:#b3202b}
+.sp{flex:1}
+#btnSound.need{background:var(--amber);color:#fff;animation:pl 1.2s infinite}
+@keyframes pl{50%{transform:scale(1.06)}}
+main{flex:1;display:flex;gap:14px;padding:14px;min-height:0}
+#board{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--card);border-radius:16px;border:1px solid var(--line)}
+.bhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bhead b{font-size:17px}.bhead .hint{color:var(--mut);font-size:13px}
+#floor{position:relative;flex:1;overflow:auto;background-color:#fbf8f3;background-image:linear-gradient(#efe8dd 1px,transparent 1px),linear-gradient(90deg,#efe8dd 1px,transparent 1px);background-size:20px 20px;border-radius:0 0 16px 16px;min-height:360px}
+.tab{position:absolute;width:176px;height:226px;background:#2f2a27;border-radius:16px;padding:7px;box-shadow:0 4px 10px #0003;touch-action:none;user-select:none}
+.tab .scr{background:#fff;border-radius:10px;height:100%;padding:6px 8px;display:flex;flex-direction:column;gap:2px;position:relative;cursor:grab}
+.tab.drag{z-index:5;box-shadow:0 12px 24px #0005}.tab.drag .scr{cursor:grabbing}
+.tab .r1{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+.dot{width:10px;height:10px;border-radius:50%;background:#b8b0a6}.dot.on{background:var(--green)}.dot.play{background:var(--blue)}
+.tab .x{margin-left:auto;padding:0 6px;background:none;color:#b8aea2;font-size:15px;line-height:1}
+.tab .lab{border:0;background:#fbf6ee;text-align:center;font-size:24px;font-weight:700;padding:2px 4px;border-radius:8px;margin-top:2px}
+.tab .st{font-size:12px;text-align:center;color:var(--mut);min-height:17px}
+.tab .r3{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+.tab .r1,.tab .st{cursor:grab}
+.sw{position:relative;width:52px;height:28px;border-radius:99px;background:#cfc6ba;padding:0;transition:.15s}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 3px #0004}
+.sw.on{background:var(--green)}.sw.on::after{left:27px}
+.tab .swl{font-size:12px;font-weight:700}
+.tab .rs{padding:4px 8px;font-size:13px;background:var(--amber);color:#fff;font-weight:700;width:100%}
+.tab .tg{width:100%;font-size:12px;padding:2px 4px;margin:3px 0}
+.tab .ak{font-size:11px;color:#b7791f;font-weight:700}
+.tab.desel{opacity:.55}
+#allOff.force{background:#c1121f;color:#fff;font-weight:700}
+#stockBar{display:flex;gap:8px;flex-wrap:wrap;padding:4px 10px;font-size:13px}#stockBar span{background:#fff3;border-radius:99px;padding:2px 10px}#stockBar .low{background:#e63946;color:#fff}
+.tab.off .scr{background:#eceae6}.tab.off .lab{color:#9b938a}
+.tab.locked .scr{box-shadow:inset 0 0 0 3px var(--amber)}
+.tab.offline .scr{opacity:.6}
+#feed{width:400px;display:flex;flex-direction:column;background:var(--card);border-radius:16px;border:1px solid var(--line);min-height:0}
+#feed .fh{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+#feed .fh b{font-size:17px}
+#list{flex:1;overflow:auto;padding:8px}
+.row{border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:8px;background:#fff}
+.row .h{display:flex;align-items:center;gap:8px}
+.row .tb{font-size:20px;font-weight:700}
+.row .tm{margin-left:auto;color:var(--mut);font-size:13px}
+.row .pz{color:var(--green);font-weight:700}
+.row .ln{font-size:13px;color:var(--mut);margin-top:3px}
+.row.wait{border-color:var(--red);background:#fff4f3;animation:wb 1.4s infinite}
+@keyframes wb{50%{background:#ffe3e1}}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;background:#eee;color:#555;margin-right:4px}
+.tag.g{background:#e3f6ee;color:#12785a}.tag.r{background:#fde1e1;color:#b3202b}.tag.a{background:#fdeac8;color:#9a5d00}.tag.b{background:#e6ecff;color:#2f4fb3}
+#alerts{position:fixed;left:50%;top:70px;transform:translateX(-50%);display:flex;flex-direction:column;gap:10px;z-index:50;width:min(640px,94vw)}
+.al{background:linear-gradient(135deg,#ffd166,#ff9f1c);color:#3a2300;border-radius:18px;padding:14px 18px;box-shadow:0 12px 30px #0006;display:flex;align-items:center;gap:14px;animation:pop .35s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.al .big{font-size:26px;font-weight:800;line-height:1.2}.al .sub{font-size:16px;margin-top:2px}
+.al button{background:#3a2300;color:#fff;padding:12px 18px;font-weight:700;font-size:16px;white-space:nowrap}
+.al .em{font-size:38px}
+.modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+.modal.on{display:flex}
+.pop{background:#fff;border-radius:18px;padding:20px 22px;max-height:94vh;overflow:auto;width:min(980px,96vw);position:relative}
+.pop h3{margin:0 0 10px;font-size:20px}.pop .cl{position:absolute;right:14px;top:12px;padding:4px 10px}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}th{background:var(--soft);position:sticky;top:0}
+.sec{margin:16px 0 6px;font-weight:700;color:var(--red2)}
+.f{display:flex;align-items:center;gap:10px;margin:8px 0}.f>label{width:170px;flex:none;color:var(--mut)}.f small{color:var(--mut)}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}.seg button{border-radius:0;background:#fff}.seg button.on{background:var(--red);color:#fff}
+.cp{border:1px solid var(--line);border-radius:14px;padding:12px;margin:8px 0;display:grid;grid-template-columns:1fr 250px;gap:14px;background:var(--soft)}
+.cp .pv{position:relative;display:inline-block;max-width:100%;border-radius:10px;overflow:hidden;background:#fff;border:1px dashed var(--line);min-height:120px;text-align:center}
+.cp .pv img{display:block;max-width:100%;max-height:260px;margin:0 auto}
+.cp .pv .ph{padding:40px 10px;color:var(--mut);font-size:13px}
+.cp .pv .cd{position:absolute;left:50%;transform:translate(-50%,-50%);white-space:nowrap;letter-spacing:.06em}
+.cp input[type=range]{padding:0;border:0}
+.cp input[type=color]{padding:2px;height:34px;width:60px}
+#login{position:fixed;inset:0;background:#2f2a27;display:flex;align-items:center;justify-content:center;z-index:100}
+#login .box{background:#fff;border-radius:20px;padding:26px;width:min(460px,94vw)}
+#login h2{margin:0 0 4px}#login p{margin:0 0 14px;color:var(--mut);font-size:13px}
+#login .f>label{width:90px}
+.err{color:var(--red2);font-size:13px;min-height:18px}
+#banner{display:none;background:#fde1e1;color:#b3202b;text-align:center;padding:6px;font-weight:700}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#2b2420;color:#fff;padding:10px 20px;border-radius:99px;opacity:0;transition:.25s;z-index:200;pointer-events:none}
+#toast.on{opacity:1}
+@media(max-width:1000px){main{flex-direction:column}#feed{width:auto;height:380px}.cp{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="login"><div class="box">
+ <h2>🎄 페리 산타 관제</h2><p>서버 주소와 공개 키를 한 번만 넣으면 이 PC에 기억해요. 서버를 아직 안 만들었으면 아래 "데모로 보기"를 눌러 보세요.</p>
+ <div class="f"><label>서버 주소</label><input id="lUrl" placeholder="https://xxxx.supabase.co" spellcheck="false"></div>
+ <div class="f"><label>공개 키</label><input id="lKey" placeholder="eyJ… 또는 sb_publishable_…" spellcheck="false"></div>
+ <div class="f"><label>이메일</label><input id="lMail" type="email" autocomplete="username"></div>
+ <div class="f"><label>비밀번호</label><input id="lPw" type="password" autocomplete="current-password"></div>
+ <div class="err" id="lErr"></div>
+ <div style="display:flex;gap:8px"><button class="pri" id="lGo" style="flex:1">로그인</button><button id="lDemo">데모로 보기</button></div>
+</div></div>
+
+<div id="top">
+ <div class="brand">🎄 페리 프로모션 관제 <small style="font-size:12px;font-weight:400;color:var(--mut)">v10</small></div>
+ <span id="modeBadge" class="badge b-co"></span><span id="conn" class="badge b-on"></span>
+ <div class="sp"></div>
+ <button id="btnSound" class="need">🔇 소리 켜기</button>
+ <button id="btnVoice">🗣 음성 알림 꺼짐</button>
+ <button id="btnSum">오늘 성공 고객 · 엑셀</button>
+ <button id="btnMonth">1개월 목록</button>
+ <button id="btnGames">게임 업데이트</button>
+ <button id="btnFind">쿠폰 사용 조회</button>
+ <button id="btnSet">설정</button>
+ <button id="btnOut">로그아웃</button>
+</div>
+<div id="banner"></div>
+<main>
+ <section id="board">
+  <div class="bhead"><b>태블릿 배치판</b><span id="cnt" class="hint"></span><span class="hint">· 카드 윗줄을 잡고 끌어서 옮겨요</span><div class="sp"></div><select id="gFilter" title="게임별 보기" style="width:auto"></select>
+   <label class="hint" style="margin-left:6px">운영 게임</label><select id="actGame" style="width:auto"><option value="all">모든 게임</option><option value="xmas">산타 굴뚝배달</option><option value="sled">PELI SLIDE</option><option value="tree">페리 크리스마스</option><option value="catch">떨어지는 선물 받기</option><option value="off">게임 끄기</option></select><button id="allOn">전체 띄우기</button><button id="allOff" class="force">🧾 모두 주문화면으로</button><button id="autoLay">정렬</button><button class="pri" id="addTab">＋ 태블릿 추가</button></div>
+  <div id="stockBar"></div><div id="floor"></div>
+ </section>
+ <aside id="feed"><div class="fh"><b>실시간 · 오늘 성공</b><span id="feedCnt" class="hint"></span></div><div id="list"></div></aside>
+</main>
+<div id="alerts"></div>
+
+<div class="modal" id="mSum"><div class="pop"><button class="cl" data-cl="mSum">✕</button>
+ <h3>오늘 성공 고객 <span id="sumDate" class="hint" style="font-size:14px;font-weight:400;color:var(--mut)"></span></h3>
+ <div id="sumStat" style="margin-bottom:8px"></div>
+ <div style="max-height:52vh;overflow:auto"><table><thead><tr><th>발송</th><th>이름</th><th>전화번호</th><th>성공시간</th><th>테이블</th><th>태블릿</th><th>쿠폰</th><th>쿠폰번호</th><th>선택수신</th></tr></thead><tbody id="sumBody"></tbody></table></div>
+ <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="pri" id="xl">엑셀 다운로드 (.xlsx)</button><button class="grn" id="markAll">전체 "발송 완료" 표시</button><div class="sp"></div><button data-cl="mSum">닫기</button></div>
+ <p class="hint" style="color:var(--mut);font-size:13px">엑셀 열: 이름 · 전화번호 · 성공시간 · 테이블번호 · 태블릿번호 · 쿠폰종류 · 쿠폰번호 · 유효기간 · 선택수신. 문자 대량발송 서비스에 올릴 때 필요한 열만 고르세요. 쿠폰 이미지는 설정에서 올린 이미지를 따로 내려받아 첨부하세요.</p>
+</div></div>
+
+<div class="modal" id="mFind"><div class="pop" style="width:min(720px,96vw)"><button class="cl" data-cl="mFind">✕</button>
+ <h3>쿠폰 사용 조회</h3>
+ <div class="f"><input id="fq" placeholder="쿠폰번호(예: dk9915) · 전화번호 뒷 4자리 · 이름" autocomplete="off"><button class="pri" id="fgo" style="flex:none">조회</button></div>
+ <div id="fres"></div>
+</div></div>
+
+<div class="modal" id="mSet"><div class="pop"><button class="cl" data-cl="mSet">✕</button>
+ <h3>설정</h3>
+ <div class="sec">보상 방식</div>
+ <div class="f"><label>기본 보상 방식</label><div class="seg" id="sMode"><button data-v="onsite">현장 증정</button><button data-v="coupon">쿠폰 발송(다음 방문)</button><button data-v="capture">쿠폰 캡처</button></div><small>태블릿 설정이 "서버 따름"일 때 적용돼요 · 쿠폰 캡처는 이름·번호 없이 화면 사진으로 받아가요(일련번호는 관제에 저장)</small></div>
+ <div class="f"><label>캡처 안내 문구</label><input id="sCap" maxlength="40" style="width:340px"></div>
+ <div class="sec">게임 목록 (여러 게임 운영)</div>
+ <div id="sGames"></div>
+ <div class="sec">기간 · 중복 방지</div>
+ <div class="f"><label>쿠폰 유효기간(일)</label><input id="sExp" type="number" min="1" max="365" style="width:100px"></div>
+ <div class="f"><label>개인정보 보유(일)</label><input id="sRet" type="number" min="0" max="365" style="width:100px"><small>쿠폰 유효기간이 끝난 뒤 이 기간이 지나면 이름·번호 파기 대상</small></div>
+ <div class="f"><label>성공 후 자동 리셋(시간)</label><input id="sRst" type="number" min="1" max="24" step="0.5" style="width:100px"><small>"새 손님" 버튼을 깜빡해도 이 시간이 지나면 다시 열려요</small></div>
+ <div class="f"><label>캠페인 이름</label><input id="sCamp" style="width:200px"><small>같은 번호는 캠페인당 1회만 가능 · 이름을 바꾸면 모두 다시 참여할 수 있어요</small></div>
+ <div class="sec">쿠폰 종류 (태블릿 쿠폰 화면에 그대로 표시)</div>
+ <div id="sCoupons"></div>
+ <div class="f" style="align-items:flex-start"><label>안내 문구 (한 줄에 하나)</label><textarea id="sNotes" rows="3"></textarea></div>
+ <div class="sec">이 PC 전용</div>
+ <div class="f"><label>오늘 고객 요약 자동 열기</label><input id="sSum" type="time" style="width:130px"><small>관제 화면이 켜져 있을 때 이 시각에 목록이 자동으로 떠요</small></div>
+ <div class="sec">개인정보 파기</div>
+ <div class="f"><button class="dng" id="purge">기간 지난 이름·번호 파기 실행</button><small>통계(성공 횟수, 시간, 쿠폰 종류)는 남기고 이름·번호만 지워요</small></div>
+ <div style="display:flex;gap:8px;margin-top:14px"><div class="sp"></div><button data-cl="mSet">취소</button><button class="pri" id="sSave">저장</button></div>
+</div></div>
+<div class="modal" id="mMonth"><div class="pop" style="width:min(1100px,98vw)"><button class="cl" data-cl="mMonth">✕</button>
+ <h3>쿠폰 발급 · 개인정보 목록 <span class="hint" style="font-size:13px;font-weight:400;color:var(--mut)">최근 1개월 이상 보관</span></h3>
+ <div class="f" style="gap:8px;flex-wrap:wrap"><div class="seg" id="mRange"><button data-d="1" class="on">오늘</button><button data-d="7">7일</button><button data-d="30">30일</button><button data-d="60">60일</button></div><select id="mGame" style="width:auto"></select><select id="mKind" style="width:auto"><option value="">전체 방식</option><option value="coupon">쿠폰 발송</option><option value="capture">쿠폰 캡처</option><option value="onsite">현장 증정</option></select><div class="sp"></div><span id="mStat" class="hint"></span></div>
+ <div style="max-height:56vh;overflow:auto"><table><thead><tr><th>일시</th><th>게임</th><th>방식</th><th>일련번호</th><th>쿠폰번호</th><th>쿠폰</th><th>테이블</th><th>이름</th><th>전화번호</th><th>수신</th><th>사용</th></tr></thead><tbody id="mBody"></tbody></table></div>
+ <div style="display:flex;gap:8px;margin-top:12px"><button class="pri" id="mXl">엑셀 다운로드 (.xlsx)</button><div class="sp"></div><button data-cl="mMonth">닫기</button></div>
+ <p class="hint" style="color:var(--mut);font-size:13px">개인정보(이름·번호)는 설정의 보유기간 이후 파기 실행 전까지 보관돼요. 일련번호·쿠폰번호·시간 통계는 파기 후에도 남아요.</p>
+</div></div>
+<div class="modal" id="mGames"><div class="pop" style="width:min(760px,96vw)"><button class="cl" data-cl="mGames">✕</button>
+ <h3>게임 업데이트 (앱 재설치 없이 자동 반영)</h3>
+ <div class="f"><label>게임</label><select id="gSel" style="width:auto"></select></div>
+ <div class="f"><label>새 버전 파일</label><button id="gPick">게임 HTML 선택</button><input type="file" id="gFile" accept=".html,text/html" hidden><span id="gFn" class="hint"></span></div>
+ <div class="f"><label>메모</label><input id="gNote" placeholder="예: 쿠폰 문구 수정" style="width:320px"></div>
+ <div class="f"><button class="pri" id="gUp">올리고 바로 적용</button><button id="gClr" class="dng">내장 버전으로 되돌리기</button></div>
+ <div class="sec">버전 기록 (최근 10개)</div>
+ <div style="max-height:34vh;overflow:auto"><table><thead><tr><th>시간</th><th>메모</th><th>크기</th><th>상태</th><th></th></tr></thead><tbody id="gBody"></tbody></table></div>
+ <p class="hint" style="color:var(--mut);font-size:13px">올리면 태블릿이 5초 안에 내려받고, 앱이 숨김이거나 홈 화면에서 20초 쉬는 때 자동으로 새 버전으로 바뀌어요. 문제가 생기면 이전 버전의 "적용"을 눌러 되돌리세요.</p>
+</div></div>
+<div id="toast"></div>
+
+<script>/* ===== XB : 서버(Supabase) / 데모(이 기기 안) 공용 통신 모듈 =====
+   - 서버 주소·공개 키가 있으면 Supabase 함수(RPC)를 호출하고,
+   - 없으면 같은 규칙을 흉내 내는 데모 저장소(localStorage)로 동작합니다. */
+const XB=(function(){
+ const DEF_CONFIG={
+  mode:'coupon',active_game:'all',tablet_game:{},campaign:'xmas2026',expiry_days:30,retention_days:30,reset_hours:2,capture_msg:'쿠폰 사진을 찍어가세요! 다음 방문시 사용가능',
+  games:[{id:'xmas',name:'페리 산타 굴뚝배달',enabled:true,campaign:'xmas2026',own:false},{id:'sled',name:'PELI SLIDE',enabled:true,campaign:'xmas2026',own:false}],
+  coupons:[
+   {id:'drink',name:'음료 1잔',prefix:'dk',img:null,codeY:84,on:true},
+   {id:'fries',name:'감자튀김(소)',prefix:'fr',img:null,codeY:84,on:true},
+   {id:'cheese',name:'치즈볼 5ea',prefix:'cb',img:null,codeY:84,on:true}],
+  notes:['1회 한정 사용 가능한 쿠폰입니다 (중복 사용 불가)','사용 시 전화번호 뒷자리를 불러주세요 · 주문 시 사용 부탁드려요']
+ };
+ let C={url:'',key:'',store:'',token:'',refresh:'',exp:0,email:''};
+ const nowIso=()=>new Date().toISOString();
+ const clone=o=>JSON.parse(JSON.stringify(o));
+ function init(o){C=Object.assign(C,o||{});}
+ function isLocal(){return !(C.url&&C.key);}
+
+ /* ---------- 서버 호출 ---------- */
+ async function rpc(fn,args,asAdmin){
+  if(asAdmin)await ensureToken();
+  const h={'apikey':C.key,'Content-Type':'application/json'};
+  if(asAdmin&&C.token)h['Authorization']='Bearer '+C.token;
+  else if(!/^sb_/.test(C.key))h['Authorization']='Bearer '+C.key;
+  const r=await fetch(C.url.replace(/\/+$/,'').replace(/\/rest\/v1$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(args||{})});
+  const txt=await r.text();let j=null;try{j=txt?JSON.parse(txt):null;}catch(e){}
+  if(!r.ok){const e=new Error((j&&(j.message||j.hint||j.error_description))||('HTTP '+r.status));e.status=r.status;throw e;}
+  return j;
+ }
+ async function ensureToken(){
+  if(!C.token)throw new Error('로그인이 필요해요');
+  if(C.exp&&Date.now()>C.exp-60000&&C.refresh){
+   const r=await fetch(C.url.replace(/\/+$/,'')+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':C.key,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:C.refresh})});
+   const j=await r.json();if(!r.ok)throw new Error('로그인이 만료됐어요. 다시 로그인해 주세요');
+   saveSession(j,C.email);
+  }
+ }
+ function saveSession(j,email){
+  C.token=j.access_token;C.refresh=j.refresh_token;C.exp=Date.now()+(j.expires_in||3600)*1000;C.email=email||C.email;
+  try{localStorage.setItem('xmas_admin_session',JSON.stringify({token:C.token,refresh:C.refresh,exp:C.exp,email:C.email}));}catch(e){}
+ }
+ function restoreSession(){
+  try{const s=JSON.parse(localStorage.getItem('xmas_admin_session')||'null');if(s&&s.token){C.token=s.token;C.refresh=s.refresh;C.exp=s.exp;C.email=s.email;return s.email;}}catch(e){}
+  return '';
+ }
+ async function login(email,pw){
+  if(isLocal()){C.email=email||'demo';return C.email;}
+  const r=await fetch(C.url.replace(/\/+$/,'')+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':C.key,'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+  const j=await r.json();
+  if(!r.ok)throw new Error(j.error_description||j.msg||j.message||'로그인에 실패했어요');
+  saveSession(j,email);return email;
+ }
+ function logout(){C.token='';C.refresh='';C.exp=0;try{localStorage.removeItem('xmas_admin_session');}catch(e){}}
+
+ /* ---------- 데모 저장소 (서버와 같은 규칙) ---------- */
+ const K_DB='xmasdemo_db',K_CF='xmasdemo_cfg';
+ function ldb(){try{const j=JSON.parse(localStorage.getItem(K_DB)||'null');if(j)return j;}catch(e){}return{tablets:{},wins:[],seq:0};}
+ function sdb(d){localStorage.setItem(K_DB,JSON.stringify(d));}
+ function lcf(){try{const j=JSON.parse(localStorage.getItem(K_CF)||'null');if(j&&j.config)return j;}catch(e){}return{config:clone(DEF_CONFIG),ver:1};}
+ function scf(c){localStorage.setItem(K_CF,JSON.stringify(c));}
+ const builds=d=>{const o={};(d.builds||[]).filter(b=>b.active).forEach(b=>{o[b.game]=b.ver;});return o;};
+ const lockedNow=t=>!!(t.locked_until&&new Date(t.locked_until)>new Date());
+ const tabView=t=>Object.assign({},t,{locked:lockedNow(t)});
+ const ymd=d=>{const z=n=>String(n).padStart(2,'0');return z(d.getMonth()+1)+z(d.getDate());};
+ const L={
+  poll(tab,state,meta){
+   const d=ldb();tab=String(tab).trim();
+   const t=d.tablets[tab]||(d.tablets[tab]={tablet_no:tab,table_label:/^[STC]\d+$/.test(tab)?tab.slice(1):null,enabled:true,locked_until:null,pos_x:null,pos_y:null,last_seen:null,state:null});
+   t.last_seen=nowIso();if(state)t.state=state;if(meta)t.meta=meta;sdb(d);const c=lcf();
+   return{enabled:t.enabled,locked:lockedNow(t),locked_until:t.locked_until,table_label:t.table_label||t.tablet_no,mode:c.config.mode||'coupon',cfg_ver:c.ver,cmd:t.cmd||null,cmd_seq:t.cmd_seq||0,builds:builds(d),server_time:nowIso()};
+  },
+  config(){return clone(lcf().config);},
+  win(a){
+   const d=ldb();
+   if(a.nonce){const w0=d.wins.find(x=>x.nonce===a.nonce);if(w0)return{ok:true,id:w0.id,serial:w0.serial,table_label:w0.table_label,code:w0.code,expires_at:w0.expires_at};}
+   const t=d.tablets[String(a.tablet).trim()];if(!t)throw new Error('no_tablet');
+   if(lockedNow(t))return{ok:false,err:'locked'};
+   const c=lcf().config;const today=new Date().toDateString();
+   const n=d.wins.filter(w=>new Date(w.won_at).toDateString()===today).length+1;
+   const id=(d.seq||0)+1;d.seq=id;const ser=ymd(new Date())+'-'+String(n).padStart(3,'0');
+   const md=a.mode==='onsite'?'onsite':(a.mode==='capture'?'capture':'coupon'),pf=String(a.prefix||'').toLowerCase().slice(0,4);
+   const cap=md==='capture',code=cap?pf+ser.replace('-',''):null,ex=cap?new Date(Date.now()+(c.expiry_days||30)*86400000).toISOString():null;
+   d.wins.push({id,serial:ser,nonce:a.nonce||null,campaign:a.campaign||c.campaign||'xmas',game:a.game||null,tablet_no:t.tablet_no,table_label:t.table_label||t.tablet_no,prize_id:a.prize_id,prize_name:a.prize_name,prefix:pf,mode:md,won_at:nowIso(),name:null,phone:null,claimed_at:cap?nowIso():null,code,consent_required:null,consent_marketing:null,consent_version:null,consent_at:null,expires_at:ex,served_at:null,used_at:null,sent_at:null});
+   t.locked_until=new Date(Date.now()+(c.reset_hours||2)*3600000).toISOString();sdb(d);
+   return{ok:true,id,serial:ser,table_label:t.table_label||t.tablet_no,code,expires_at:ex};
+  },
+  phoneCheck(p,camp){const d=ldb(),c=lcf().config,ph=String(p||'').replace(/\D/g,'');return d.wins.some(w=>w.campaign===(camp||c.campaign||'xmas')&&w.phone===ph);},
+  wins(from,to){const f=new Date(from||0),t=to?new Date(to):new Date(8.64e15);return ldb().wins.filter(w=>{const x=new Date(w.won_at);return x>=f&&x<t;}).sort((a,b)=>b.id-a.id).slice(0,5000).map(w=>{const o=Object.assign({},w);delete o.nonce;return o;});},
+  gameGet(g){const b=(ldb().builds||[]).find(x=>x.game===g&&x.active);return b?{ver:b.ver,html:b.html}:null;},
+  gamePut(g,html,note){const d=ldb();d.builds=d.builds||[];d.builds.forEach(b=>{if(b.game===g)b.active=false;});const v=Date.now();d.builds.push({id:(d.bseq=(d.bseq||0)+1),game:g,ver:v,note:note||'',html:html,active:true,created_at:nowIso()});d.builds=d.builds.slice(-10);sdb(d);return{ver:v};},
+  gameList(g){return(ldb().builds||[]).filter(b=>!g||b.game===g).map(b=>({id:b.id,game:b.game,ver:b.ver,note:b.note,active:b.active,created_at:b.created_at,size:b.html.length})).sort((a,b)=>b.ver-a.ver);},
+  gameActivate(id){const d=ldb(),b=(d.builds||[]).find(x=>x.id===id);if(!b)throw new Error('no_build');d.builds.forEach(x=>{if(x.game===b.game)x.active=(x.id===id);});sdb(d);},
+  gameClear(g){const d=ldb();(d.builds||[]).forEach(b=>{if(b.game===g)b.active=false;});sdb(d);},
+  claim(a){
+   const d=ldb(),c=lcf().config,ph=String(a.phone||'').replace(/\D/g,''),nm=String(a.name||'').trim().slice(0,20);
+   if(!/^01[016789][0-9]{7,8}$/.test(ph))return{ok:false,err:'phone'};
+   if(!nm)return{ok:false,err:'name'};
+   const w=d.wins.find(x=>x.id===a.win_id);if(!w)return{ok:false,err:'nowin'};
+   if(w.mode!=='coupon')return{ok:false,err:'mode'};
+   if(w.claimed_at)return{ok:true,code:w.code,expires_at:w.expires_at,serial:w.serial};
+   if(d.wins.some(x=>x.campaign===w.campaign&&x.phone===ph))return{ok:false,err:'dup'};
+   w.name=nm;w.phone=ph;w.claimed_at=nowIso();w.code=(w.prefix||'')+ph.slice(-4);w.consent_required=true;w.consent_marketing=!!a.marketing;w.consent_version=a.cver||null;w.consent_at=nowIso();
+   w.expires_at=new Date(Date.now()+(c.expiry_days||30)*86400000).toISOString();sdb(d);
+   return{ok:true,code:w.code,expires_at:w.expires_at,serial:w.serial};
+  },
+  snapshot(from){
+   const d=ldb(),c=lcf(),f=new Date(from||0);
+   return{server_time:nowIso(),cfg_ver:c.ver,builds:builds(d),tablets:Object.values(d.tablets).map(tabView).sort((a,b)=>String(a.tablet_no).localeCompare(String(b.tablet_no),'ko',{numeric:true})),
+    wins:d.wins.filter(w=>new Date(w.won_at)>=f).sort((a,b)=>b.id-a.id).slice(0,500).map(w=>{const o=Object.assign({},w);delete o.nonce;return o;})};
+  },
+  setTablet(t){const d=ldb(),k=String(t.tablet_no).trim();const o=d.tablets[k]||(d.tablets[k]={tablet_no:k,locked_until:null,last_seen:null,state:null});
+   o.table_label=(t.table_label||'').trim()||null;if(t.enabled!=null)o.enabled=!!t.enabled;o.pos_x=t.pos_x;o.pos_y=t.pos_y;sdb(d);},
+  cmdTablet(no,cmd){const d=ldb(),t=d.tablets[String(no)];if(!t)throw new Error('no_tablet');t.cmd=cmd;t.cmd_seq=(t.cmd_seq||0)+1;t.enabled=true;sdb(d);},
+  resetTablet(no){const d=ldb();if(d.tablets[no]){d.tablets[no].locked_until=null;sdb(d);}},
+  delTablet(no){const d=ldb();delete d.tablets[no];sdb(d);},
+  getConfig(){return clone(lcf().config);},
+  setConfig(cfg){const c=lcf();c.config=clone(cfg);c.ver=(c.ver||1)+1;scf(c);},
+  winUpdate(id,p){const d=ldb(),w=d.wins.find(x=>x.id===id);if(!w)return;
+   const f=(k,v)=>{if(v==null)return;w[k]=v?(w[k]||nowIso()):null;};f('served_at',p.served);f('used_at',p.used);f('sent_at',p.sent);sdb(d);},
+  find(q){q=String(q||'').trim().toLowerCase();if(q.length<2)return[];
+   return ldb().wins.filter(w=>w.claimed_at&&((w.code||'').toLowerCase()===q||(w.serial||'').toLowerCase()===q||(w.phone||'').slice(-4)===q||(w.name||'').toLowerCase().includes(q))).sort((a,b)=>b.id-a.id).slice(0,30).map(w=>{const o=Object.assign({},w);delete o.nonce;return o;});},
+  purge(){const d=ldb(),c=lcf().config,rd=(c.retention_days==null?30:c.retention_days)*86400000;let n=0;
+   d.wins.forEach(w=>{if(w.phone&&w.expires_at&&Date.now()-new Date(w.won_at).getTime()>30*86400000&&new Date(w.expires_at).getTime()+rd<Date.now()){w.name=null;w.phone=null;n++;}});sdb(d);return{cleared:n};}
+ };
+
+ /* ---------- 공개 API ---------- */
+ const tabletArgs=a=>({p_key:C.store,p_tablet:String(a.tablet),p_prize_id:a.prize_id,p_prize_name:a.prize_name,p_prefix:a.prefix,p_mode:a.mode,p_nonce:a.nonce||null,p_campaign:a.campaign||null,p_game:a.game||null});
+ return{
+  DEF_CONFIG,init,isLocal,restoreSession,login,logout,
+  email:()=>C.email,
+  /* 태블릿(게임) */
+  async selfReset(tab,code){return isLocal()?L.resetTablet(String(tab)):rpc('xmas_tablet_selfreset',{p_key:C.store,p_tablet:String(tab),p_code:String(code)});},
+  async poll(tab,state,meta){return isLocal()?L.poll(tab,state,meta):rpc('xmas_poll2',{p_key:C.store,p_tablet:String(tab),p_state:state||null,p_meta:meta||null});},
+  async gameGet(g){return isLocal()?L.gameGet(g):rpc('xmas_game_get',{p_key:C.store,p_game:g||'xmas'});},
+  async config(){const c=isLocal()?L.config():await rpc('xmas_config',{p_key:C.store});return mergeCfg(c);},
+  async win(a){return isLocal()?L.win(a):rpc('xmas_win2',tabletArgs(a));},
+  async phoneCheck(p,camp){return isLocal()?L.phoneCheck(p,camp):rpc('xmas_phone_check2',{p_key:C.store,p_phone:p,p_campaign:camp||null});},
+  async claim(a){return isLocal()?L.claim(a):rpc('xmas_claim',{p_key:C.store,p_win_id:a.win_id,p_name:a.name,p_phone:a.phone,p_marketing:!!a.marketing,p_cver:a.cver||null});},
+  /* 관제(관리자) */
+  async snapshot(from){return isLocal()?L.snapshot(from):rpc('xmas_admin_snapshot',{p_from:from},true);},
+  async setTablet(t){return isLocal()?L.setTablet(t):rpc('xmas_admin_tablet_upsert',{p_tablet:String(t.tablet_no),p_label:t.table_label||'',p_enabled:t.enabled,p_x:t.pos_x,p_y:t.pos_y},true);},
+  async cmdTablet(no,cmd){return isLocal()?L.cmdTablet(no,cmd):rpc('xmas_admin_tablet_cmd',{p_tablet:String(no),p_cmd:cmd},true);},
+  async resetTablet(no){return isLocal()?L.resetTablet(no):rpc('xmas_admin_tablet_reset',{p_tablet:String(no)},true);},
+  async delTablet(no){return isLocal()?L.delTablet(no):rpc('xmas_admin_tablet_delete',{p_tablet:String(no)},true);},
+  async getConfig(){return mergeCfg(isLocal()?L.getConfig():await rpc('xmas_admin_get_config',{},true));},
+  async setConfig(cfg){return isLocal()?L.setConfig(cfg):rpc('xmas_admin_set_config',{p_config:cfg},true);},
+  async winUpdate(id,p){return isLocal()?L.winUpdate(id,p):rpc('xmas_admin_win_update',{p_id:id,p_served:p.served==null?null:p.served,p_used:p.used==null?null:p.used,p_sent:p.sent==null?null:p.sent},true);},
+  async find(q){return isLocal()?L.find(q):rpc('xmas_admin_find',{p_q:q},true);},
+  async wins(from,to){return isLocal()?L.wins(from,to):rpc('xmas_admin_wins',{p_from:from,p_to:to||null},true);},
+  async gamePut(g,html,note){return isLocal()?L.gamePut(g,html,note):rpc('xmas_admin_game_put',{p_game:g,p_html:html,p_note:note||''},true);},
+  async gameList(g){return isLocal()?L.gameList(g):rpc('xmas_admin_game_list',{p_game:g||null},true);},
+  async gameActivate(id){return isLocal()?L.gameActivate(id):rpc('xmas_admin_game_activate',{p_id:id},true);},
+  async gameClear(g){return isLocal()?L.gameClear(g):rpc('xmas_admin_game_clear',{p_game:g},true);},
+  async purge(){return isLocal()?L.purge():rpc('xmas_admin_purge',{},true);}
+ };
+ function mergeCfg(c){const o=Object.assign(clone(DEF_CONFIG),c||{});if(!Array.isArray(o.coupons)||!o.coupons.length)o.coupons=clone(DEF_CONFIG.coupons);if(!Array.isArray(o.notes))o.notes=clone(DEF_CONFIG.notes);if(!Array.isArray(o.games)||!o.games.length)o.games=clone(DEF_CONFIG.games);return o;}
+})();
+if(typeof module!=='undefined')module.exports=XB;
+
+/* 의존성 없는 최소 XLSX 생성기 (압축 없이 저장하는 ZIP). rows: 2차원 배열, 모든 값은 문자열로 저장 */
+const XLSXW=(function(){
+ const enc=new TextEncoder();
+ let T=null;
+ function crc(b){if(!T){T=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;T[n]=c>>>0;}}
+  let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=T[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
+ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'');
+ function colName(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;}
+ function zip(files){
+  const parts=[],cd=[];let off=0;
+  const u16=v=>[v&255,(v>>8)&255],u32=v=>[v&255,(v>>8)&255,(v>>16)&255,(v>>>24)&255];
+  for(const f of files){
+   const nm=enc.encode(f.name),d=typeof f.data==='string'?enc.encode(f.data):f.data,cr=crc(d);
+   const lh=new Uint8Array([0x50,0x4b,3,4,20,0,0x00,0x08,0,0,0,0,0x21,0,...u32(cr),...u32(d.length),...u32(d.length),...u16(nm.length),0,0]);
+   parts.push(lh,nm,d);
+   cd.push(new Uint8Array([0x50,0x4b,1,2,20,0,20,0,0x00,0x08,0,0,0,0,0x21,0,...u32(cr),...u32(d.length),...u32(d.length),...u16(nm.length),0,0,0,0,0,0,0,0,0,0,0,0,...u32(off)]),nm);
+   off+=lh.length+nm.length+d.length;
+  }
+  const cdLen=cd.reduce((a,b)=>a+b.length,0);
+  const end=new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...u16(files.length),...u16(files.length),...u32(cdLen),...u32(off),0,0]);
+  const all=[...parts,...cd,end],tot=all.reduce((a,b)=>a+b.length,0),out=new Uint8Array(tot);let p=0;for(const a of all){out.set(a,p);p+=a.length;}
+  return out;
+ }
+ function build(rows,sheet,widths){
+  const sd=rows.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((v,ci)=>'<c r="'+colName(ci)+(ri+1)+'" t="inlineStr"'+(ri===0?' s="1"':'')+'><is><t xml:space="preserve">'+esc(v==null?'':v)+'</t></is></c>').join('')+'</row>').join('');
+  const cols=widths?'<cols>'+widths.map((w,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>').join('')+'</cols>':'';
+  const X='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  return zip([
+   {name:'[Content_Types].xml',data:X+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+   {name:'_rels/.rels',data:X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+   {name:'xl/workbook.xml',data:X+'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+esc(sheet||'Sheet1')+'" sheetId="1" r:id="rId1"/></sheets></workbook>'},
+   {name:'xl/_rels/workbook.xml.rels',data:X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+   {name:'xl/styles.xml',data:X+'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Malgun Gothic"/></font><font><b/><sz val="11"/><name val="Malgun Gothic"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'},
+   {name:'xl/worksheets/sheet1.xml',data:X+'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+cols+'<sheetData>'+sd+'</sheetData></worksheet>'}
+  ]);
+ }
+ return{build};
+})();
+if(typeof module!=='undefined')module.exports=XLSXW;
+</script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const z2=n=>String(n).padStart(2,'0');
+const LSK='xmas_ctl';
+const DEF_URL='https://zxehyxjjiruxgqkthotn.supabase.co';
+function lsGet(){try{return JSON.parse(localStorage.getItem(LSK)||'{}');}catch(e){return{};}}
+function lsSet(o){try{localStorage.setItem(LSK,JSON.stringify(Object.assign(lsGet(),o)));}catch(e){}}
+function toast(s){const e=$('toast');e.textContent=s;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2200);}
+const hhmm=i=>{const d=new Date(i);return z2(d.getHours())+':'+z2(d.getMinutes());};
+const ymdhm=i=>{const d=new Date(i);return d.getFullYear()+'-'+z2(d.getMonth()+1)+'-'+z2(d.getDate())+' '+z2(d.getHours())+':'+z2(d.getMinutes());};
+const ymd=i=>{const d=new Date(i);return d.getFullYear()+'.'+z2(d.getMonth()+1)+'.'+z2(d.getDate());};
+const fmtPhone=p=>{p=String(p||'');return p.length===11?p.slice(0,3)+'-'+p.slice(3,7)+'-'+p.slice(7):p.length===10?p.slice(0,3)+'-'+p.slice(3,6)+'-'+p.slice(6):p;};
+const maskPhone=p=>{p=String(p||'');return p.length>=8?p.slice(0,3)+'-****-'+p.slice(-4):p;};
+const maskName=n=>{n=String(n||'');return n.length<=1?n:n.length===2?n[0]+'*':n[0]+'*'.repeat(n.length-2)+n.slice(-1);};
+const tableText=l=>/^\d+$/.test(String(l))?l+'번 테이블':l+' 테이블';
+function bizStart(){const d=new Date();if(d.getHours()<4)d.setDate(d.getDate()-1);d.setHours(4,0,0,0);return d;}
+
+/* ---------- 상태 ---------- */
+let GF='',CONF=XB.DEF_CONFIG,TABS=[],WINS=[],offset=0,knownMax=null,started=false,dragging=null,pos={},snapTimer=null;
+const alertsOpen=new Map();let sound=false,actx=null,failCount=0;
+
+/* ---------- 로그인 ---------- */
+(function initLogin(){
+ const s=lsGet();$('lUrl').value=s.url||DEF_URL;$('lKey').value=s.key||'';$('lMail').value=s.email||'';
+ $('lGo').onclick=async()=>{
+  const url=$('lUrl').value.trim().replace(/\/rest\/v1\/?$/,'').replace(/\/+$/,''),key=$('lKey').value.trim(),mail=$('lMail').value.trim(),pw=$('lPw').value;
+  $('lErr').textContent='';
+  if(!url||!key){$('lErr').textContent='서버 주소와 공개 키를 넣어 주세요 (데모는 아래 버튼)';return;}
+  if(/^sb_secret_/.test(key)){$('lErr').textContent='비밀(secret) 키는 쓰면 안 돼요. 공개 키를 넣어 주세요';return;}
+  XB.init({url,key});$('lGo').disabled=true;
+  try{await XB.login(mail,pw);lsSet({url,key,email:mail});startApp(false);}catch(e){$('lErr').textContent=e.message;}
+  $('lGo').disabled=false;};
+ $('lPw').addEventListener('keydown',e=>{if(e.key==='Enter')$('lGo').click();});
+ $('lDemo').onclick=()=>{XB.init({url:'',key:''});startApp(true);};
+ // 저장된 로그인 복원
+ if(s.url&&s.key){XB.init({url:s.url,key:s.key});const em=XB.restoreSession();if(em){setTimeout(()=>startApp(false),0);}}
+})();
+$('btnOut').onclick=()=>{XB.logout();location.reload();};
+
+function startApp(demo){
+ $('login').style.display='none';started=true;
+ $('conn').textContent=demo?'데모 모드 (이 브라우저 안에서만)':'서버 연결 중…';$('conn').className='badge '+(demo?'b-demo':'b-on');
+ const t=lsGet().sumTime;lastSumDay=lsGet().sumDay||'';
+ tick();setInterval(tick,2000);setInterval(sumCheck,10000);setInterval(remind,15000);
+}
+
+/* ---------- 소리 ---------- */
+function ctxA(){if(!actx){const C=window.AudioContext||window.webkitAudioContext;if(C)actx=new C();}return actx;}
+function chime(strong){if(!sound)return;const c=ctxA();if(!c)return;if(c.state==='suspended')c.resume();
+ const notes=strong?[659,784,988,1319,988,1319]:[784,988];const t0=c.currentTime;
+ notes.forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=f;o.connect(g);g.connect(c.destination);
+  const s=t0+i*0.16;g.gain.setValueAtTime(0,s);g.gain.linearRampToValueAtTime(strong?0.5:0.25,s+0.02);g.gain.exponentialRampToValueAtTime(0.001,s+0.5);o.start(s);o.stop(s+0.55);});}
+$('btnSound').onclick=()=>{sound=!sound;if(sound){ctxA();if(actx&&actx.state==='suspended')actx.resume();chime(true);}
+ $('btnSound').textContent=sound?'🔔 소리 켜짐':'🔇 소리 켜기';$('btnSound').classList.toggle('need',!sound);};
+
+/* ---------- 반복 갱신 ---------- */
+async function tick(){
+ if(!started)return;
+ try{
+  const s=await XB.snapshot(bizStart().toISOString());
+  offset=new Date(s.server_time).getTime()-Date.now();failCount=0;$('banner').style.display='none';
+  if(!XB.isLocal()){$('conn').textContent='● 서버 연결됨';$('conn').className='badge b-on';}
+  const fresh=s.wins;
+  if(knownMax==null){knownMax=fresh.reduce((m,w)=>Math.max(m,w.id),0);}
+  else{fresh.filter(w=>w.id>knownMax).sort((a,b)=>a.id-b.id).forEach(w=>{knownMax=Math.max(knownMax,w.id);newWin(w);});}
+  TABS=s.tablets;WINS=fresh;
+  if(s.cfg_ver!==CONF._ver){try{CONF=await XB.getConfig();CONF._ver=s.cfg_ver;}catch(e){}}
+  renderAll();
+ }catch(e){failCount++;$('conn').textContent='● 연결 끊김';$('conn').className='badge b-bad';
+  if(failCount>=2){$('banner').style.display='block';$('banner').textContent='서버와 연결이 끊겼어요 ('+e.message+') — 자동으로 다시 시도 중';}}
+}
+const EXTRA_GAMES=[{id:'tree',name:'페리 크리스마스',enabled:true,own:false},{id:'catch',name:'떨어지는 선물 받기',enabled:true,own:false}];
+function games(){const b=(CONF.games&&CONF.games.length)?CONF.games:XB.DEF_CONFIG.games;return b.concat(EXTRA_GAMES.filter(e=>!b.some(g=>g.id===e.id)));}
+function gName(id){const g=games().find(x=>x.id===id);return g?g.name:(id||'');}
+function fillGF(){const el=$('gFilter');const sig=games().map(g=>g.id+g.name).join('|');if(el._sig===sig)return;el._sig=sig;
+ el.innerHTML='<option value="">전체 게임</option>'+games().map(g=>'<option value="'+esc(g.id)+'">'+esc(g.name)+'</option>').join('');el.value=GF;el.style.display=games().length>1?'':'none';}
+$('gFilter').onchange=e=>{GF=e.target.value;renderAll();};
+function wlist(){return GF?WINS.filter(w=>(w.game||games()[0].id)===GF):WINS;}
+function renderAll(){fillGF();renderMode();{const a=$('actGame');if(document.activeElement!==a)a.value=CONF.active_game||'all';}stockCheck();renderBoard();renderFeed();if($('mSum').classList.contains('on'))renderSum();}
+function renderMode(){const m=CONF.mode==='onsite';$('modeBadge').textContent='기본 보상: '+(CONF.mode==='capture'?'쿠폰 캡처':m?'현장 증정':'쿠폰 발송');$('modeBadge').className='badge '+(m?'b-on':'b-co');}
+
+/* ---------- 알림 ---------- */
+function newWin(w){
+ const onsite=w.mode==='onsite';
+ const el=document.createElement('div');el.className='al';el.dataset.id=w.id;
+ el.innerHTML='<div class="em">🎉</div><div style="flex:1"><div class="big">프로모션 성공! '+esc(tableText(w.table_label||w.tablet_no))+'</div><div class="sub">'+esc(w.prize_name||'')+' · '+(onsite?'현장에서 증정해 주세요':w.mode==='capture'?'쿠폰 캡처 안내 중':'쿠폰 발급 진행 중')+' · No.'+esc(w.serial)+'</div></div><button>'+(onsite?'증정 완료':'확인')+'</button>';
+ el.querySelector('button').onclick=async()=>{if(onsite){try{await XB.winUpdate(w.id,{served:true});}catch(e){toast('저장 실패: '+e.message);return;}}closeAlert(w.id);tick();};
+ $('alerts').appendChild(el);alertsOpen.set(w.id,el);chime(true);updTitle();
+ {const tl=tableText(w.table_label||numOf(w.tablet_no));const gn={sled:'펠리 슬라이드',tree:'페리 크리스마스',catch:'선물 받기'}[w.game]||'굴뚝배달';say(tl+' '+gn+' 성공! '+(w.prize_name||'')+(onsite?', 현장 증정해 주세요':''));notify('프로모션 성공 · '+tl,gn+' · '+(w.prize_name||''));stockAt=0;}
+ if(!onsite)setTimeout(()=>closeAlert(w.id),15000);
+}
+function closeAlert(id){const e=alertsOpen.get(id);if(e){e.remove();alertsOpen.delete(id);}updTitle();}
+function updTitle(){const n=alertsOpen.size;document.title=(n?'('+n+') 프로모션 성공! · ':'')+'페리 프로모션 관제';}
+function remind(){if(!sound)return;const now=Date.now()+offset;
+ if(WINS.some(w=>w.mode==='onsite'&&!w.served_at&&now-new Date(w.won_at).getTime()>30000))chime(false);}
+
+/* ---------- 게임 선택 · 명령 확인 ---------- */
+const sent={};
+const numOf=no=>String(no).replace(/^[STC](?=\d)/,'');
+const labelOf=t=>t.table_label||numOf(t.tablet_no);
+function gameOfTab(t){const m=/^([STC])\d/.exec(String(t.tablet_no));return m?{S:'sled',T:'tree',C:'catch'}[m[1]]:'xmas';}
+function selFor(n){const tg=CONF.tablet_game||{};return tg[n]||CONF.active_game||'all';}
+function tabSelected(t){const g=selFor(numOf(t.tablet_no));return g==='all'||g===gameOfTab(t);}
+async function saveCfgPart(fn,msg){try{const c=JSON.parse(JSON.stringify(await XB.getConfig()));delete c._ver;fn(c);await XB.setConfig(c);CONF=Object.assign(c,{_ver:-1});toast(msg);tick();}catch(e){toast('저장 실패: '+e.message);}}
+async function setTableGame(n,v){await saveCfgPart(c=>{c.tablet_game=c.tablet_game||{};if(v)c.tablet_game[n]=v;else delete c.tablet_game[n];},n+'번 테이블 → '+({'':'기본',xmas:'굴뚝배달',sled:'썰매',tree:'페리 크리스마스',catch:'선물 받기',off:'게임 끄기'}[v])+' (5초 안에 반영)');}
+$('actGame').onchange=async e=>{const v=e.target.value;await saveCfgPart(c=>{c.active_game=v;},'운영 게임: '+e.target.selectedOptions[0].textContent+' — 선택 안 된 앱은 자동으로 숨겨져요');};
+/* ---------- 재고 ---------- */
+let stockCnt={},stockAt=0;
+async function stockCheck(){const cs=(CONF.coupons||[]).filter(c=>c.stock!=null&&c.stock!=='');if(!cs.length){$('stockBar').innerHTML='';return;}
+ if(Date.now()-stockAt>15000){stockAt=Date.now();try{const from=cs.map(c=>c.stock_from||'2000-01-01').sort()[0];const L=await XB.wins(from);const W=Array.isArray(L)?L:(L.wins||[]);stockCnt={};
+   for(const c of cs){const f=new Date(c.stock_from||0);stockCnt[c.id]=W.filter(w=>w.prize_id===c.id&&new Date(w.won_at)>=f).length;}}catch(e){}}
+ const off=[];$('stockBar').innerHTML='<b style="opacity:.8">재고</b>'+cs.map(c=>{const left=Math.max(0,(+c.stock)-(stockCnt[c.id]||0));if(left<=0&&c.on!==false)off.push(c.id);
+  return '<span class="'+(left<=3?'low':'')+'">'+esc(c.name)+' '+(c.on===false&&left<=0?'소진':left+'개')+'</span>';}).join('');
+ if(off.length){await saveCfgPart(c=>{(c.coupons||[]).forEach(x=>{if(off.includes(x.id))x.on=false;});},'재고 소진: '+off.map(id=>((CONF.coupons||[]).find(x=>x.id===id)||{}).name).join(', ')+' — 증정품에서 자동으로 뺐어요');say('재고 소진. '+off.map(id=>((CONF.coupons||[]).find(x=>x.id===id)||{}).name).join(', '));}}
+/* ---------- 음성 · 브라우저 알림 ---------- */
+let voice=false;
+$('btnVoice').onclick=()=>{voice=!voice;$('btnVoice').textContent=voice?'🗣 음성 알림 켜짐':'🗣 음성 알림 꺼짐';if(voice){say('음성 알림을 켰어요');try{if(window.Notification&&Notification.permission==='default')Notification.requestPermission();}catch(e){}}};
+function say(t){if(!voice)return;try{const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';u.rate=1.05;speechSynthesis.speak(u);}catch(e){}}
+function notify(t,b){try{if(window.Notification&&Notification.permission==='granted'&&document.hidden)new Notification(t,{body:b});}catch(e){}}
+/* ---------- 배치판 ---------- */
+const STATE_TXT={sled:'썰매 게임 중',intro:'대기 중',guide:'게임 중',play:'게임 중',win:'게임 중',ending:'게임 중',open:'보상 확인 중',done:'보상 확인 중',onsite:'보상 확인 중',fail:'다시 하는 중',off:'쉬는 중(잠금)',home:'홈 화면',hidden:'앱 숨김',icon:'앱 숨김(아이콘)'};
+const pend={};
+function isVis(t){const p=pend[t.tablet_no];if(p&&p.until>Date.now())return p.v;return isOnline(t)?!['hidden','icon','off'].includes(t.state):false;}
+function isOnline(t){return t.last_seen&&(Date.now()+offset-new Date(t.last_seen).getTime())<20000;}
+function autoPos(i){return{x:20+(i%5)*196,y:20+Math.floor(i/5)*244};}
+function renderBoard(){
+ const fl=$('floor'),seen=new Set();
+ const online=TABS.filter(isOnline).length,on=TABS.filter(isVis).length;
+ $('cnt').textContent='태블릿 '+TABS.length+'대 · 온라인 '+online+' · 앱 띄움 '+on;
+ TABS.forEach((t,i)=>{
+  seen.add(t.tablet_no);let el=fl.querySelector('[data-no="'+CSS.escape(t.tablet_no)+'"]');
+  if(!el){el=makeCard(t);fl.appendChild(el);}
+  const ap=autoPos(i),p=pos[t.tablet_no]||{x:t.pos_x!=null?+t.pos_x:ap.x,y:t.pos_y!=null?+t.pos_y:ap.y};
+  if(dragging!==t.tablet_no){el.style.left=p.x+'px';el.style.top=p.y+'px';}
+  const on2=isOnline(t),st=on2?((t.state==='sled'&&gameOfTab(t)!=='sled')?'게임 중':(STATE_TXT[t.state]||'대기 중')):'오프라인';
+  const vis=isVis(t);el.classList.toggle('off',!vis);el.classList.toggle('locked',!!t.locked);el.classList.toggle('offline',!on2);
+  const dot=el.querySelector('.dot');dot.className='dot '+(!on2?'':(['play','guide','win','ending','sled'].includes(t.state)?'play':'on'));
+  const lab=el.querySelector('.lab');if(document.activeElement!==lab)lab.value=labelOf(t);
+  let stx=st;if(t.locked&&t.locked_until){const m=Math.max(0,Math.round((new Date(t.locked_until).getTime()-(Date.now()+offset))/60000));stx='성공 잠금 · '+m+'분 뒤 해제';}
+  else if(on2&&['hidden','icon'].includes(t.state))stx=STATE_TXT[t.state];
+  el.querySelector('.st').textContent=stx;{const mt=t.meta||{};const gl=el.querySelector('.gm');if(gl)gl.textContent=on2&&mt.game?gName(mt.game)+(mt.ver?' v'+mt.ver:''):'';}
+  const sw=el.querySelector('.sw');sw.classList.toggle('on',vis);el.querySelector('.swl').textContent=vis?'앱 띄움':'앱 숨김';
+  el.querySelector('.rs').style.display=on2?'':'none';el.querySelector('.rs').textContent=t.locked?'🔁 다시 도전 (잠금 해제)':'🔁 다시 도전';
+  {const tg=el.querySelector('.tg');if(document.activeElement!==tg)tg.value=((CONF.tablet_game||{})[numOf(t.tablet_no)])||'';
+   const g=gameOfTab(t),sg=selFor(numOf(t.tablet_no));el.classList.toggle('desel',!!g&&!(sg==='all'||sg===g));
+   const mt=t.meta||{},ak=el.querySelector('.ak');const wait=t.cmd_seq&&String(mt.ack||'')!==String(t.cmd_seq)&&sent[t.tablet_no]&&Date.now()-sent[t.tablet_no]<60000;
+   ak.textContent=!on2?'':(wait?(Date.now()-sent[t.tablet_no]>12000?'⚠ 명령 미확인 — 태블릿 확인 필요':'⏳ 명령 전달 중'):(sent[t.tablet_no]&&String(mt.ack||'')===String(t.cmd_seq)?'✓ 명령 받음':''));}
+ });
+ [...fl.children].forEach(c=>{if(!seen.has(c.dataset.no))c.remove();});
+}
+function makeCard(t){
+ const el=document.createElement('div');el.className='tab';el.dataset.no=t.tablet_no;
+ el.innerHTML='<div class="scr"><div class="r1"><span class="dot"></span>'+({sled:'🛷 SLIDE ',tree:'🎄 트리 ',catch:'🎁 선물 ',xmas:'🎅 산타 '}[gameOfTab(t)])+esc(t.tablet_no)+'<button class="x" title="삭제">×</button></div><input class="lab" maxlength="8" aria-label="테이블 번호"><div class="st"></div><div class="gm" style="font-size:11px;color:var(--mut)"></div><select class="tg" title="이 테이블 게임"><option value="">기본(운영 게임)</option><option value="xmas">굴뚝배달</option><option value="sled">PELI SLIDE</option><option value="tree">페리 크리스마스</option><option value="catch">선물 받기</option><option value="off">끄기</option></select><div class="ak"></div><button class="rs">🔁 다시 도전 (잠금 해제)</button><div class="r3"><span class="swl"></span><button class="sw" aria-label="앱 띄우기/숨기기"></button></div></div>';
+ const find=()=>TABS.find(x=>x.tablet_no===t.tablet_no)||t;
+ const savePos=async()=>{const c=find(),p=pos[t.tablet_no];if(!p)return;try{await XB.setTablet({tablet_no:t.tablet_no,table_label:c.table_label,enabled:c.enabled,pos_x:p.x,pos_y:p.y});}catch(e){toast('위치 저장 실패');}};
+ el.querySelector('.sw').onclick=async e=>{e.stopPropagation();const c=find();const nv=!isVis(c);pend[t.tablet_no]={v:nv,until:Date.now()+12000};renderBoard();
+  try{await XB.cmdTablet(t.tablet_no,nv?'show':'hide');sent[t.tablet_no]=Date.now();toast(tableText(c.table_label||t.tablet_no)+' 앱 '+(nv?'띄우기':'숨기기')+' 보냄');}catch(er){delete pend[t.tablet_no];renderBoard();toast(/xmas_admin_tablet_cmd|schema cache|bad_cmd|PGRST/.test(er.message)?'서버에 v6 SQL 패치(xmas_patch_v6.sql)를 먼저 실행해 주세요':'실패: '+er.message);}};
+ el.querySelector('.rs').onclick=async e=>{e.stopPropagation();const c=find();try{await XB.resetTablet(t.tablet_no);await XB.cmdTablet(t.tablet_no,'show');sent[t.tablet_no]=Date.now();toast(tableText(labelOf(c))+' — 다시 도전할 수 있게 열었어요');tick();}catch(er){toast('실패: '+er.message);}};
+ el.querySelector('.tg').onchange=async e=>{e.stopPropagation();await setTableGame(numOf(t.tablet_no),e.target.value);};
+ el.querySelector('.x').onclick=async e=>{e.stopPropagation();if(!confirm('기기 '+t.tablet_no+' 카드를 지울까요?\n(태블릿이 켜져 있으면 다시 나타나요)'))return;try{await XB.delTablet(t.tablet_no);tick();}catch(er){toast('실패: '+er.message);}};
+ const lab=el.querySelector('.lab');
+ lab.onfocus=()=>lab.select();lab.onkeydown=e=>{if(e.key==='Enter')lab.blur();};
+ lab.onchange=async()=>{const c=find();c.table_label=lab.value.trim();try{await XB.setTablet({tablet_no:t.tablet_no,table_label:c.table_label,enabled:c.enabled,pos_x:curPos(el).x,pos_y:curPos(el).y});toast('테이블 번호를 바꿨어요');}catch(er){toast('실패: '+er.message);}};
+ // 드래그
+ const scr=el.querySelector('.scr');let sx,sy,ox,oy;
+ scr.addEventListener('pointerdown',e=>{if(e.target.closest('button,input'))return;dragging=t.tablet_no;el.classList.add('drag');sx=e.clientX;sy=e.clientY;const c=curPos(el);ox=c.x;oy=c.y;scr.setPointerCapture(e.pointerId);});
+ scr.addEventListener('pointermove',e=>{if(dragging!==t.tablet_no)return;const fl=$('floor');let x=ox+e.clientX-sx,y=oy+e.clientY-sy;x=Math.max(0,Math.round(x/10)*10);y=Math.max(0,Math.round(y/10)*10);el.style.left=x+'px';el.style.top=y+'px';pos[t.tablet_no]={x,y};});
+ const end=()=>{if(dragging!==t.tablet_no)return;dragging=null;el.classList.remove('drag');savePos();};
+ scr.addEventListener('pointerup',end);scr.addEventListener('pointercancel',end);
+ return el;
+}
+function curPos(el){return{x:parseInt(el.style.left)||0,y:parseInt(el.style.top)||0};}
+$('addTab').onclick=async()=>{
+ const nums=TABS.map(t=>parseInt(t.tablet_no)).filter(n=>!isNaN(n));const no=String((nums.length?Math.max(...nums):0)+1);
+ const i=TABS.length,p=autoPos(i);
+ try{await XB.setTablet({tablet_no:no,table_label:no,enabled:true,pos_x:p.x,pos_y:p.y});toast('기기 '+no+' 추가 — 태블릿 설정의 "태블릿 번호"를 '+no+'로 맞춰 주세요');tick();}catch(e){toast('실패: '+e.message);}};
+$('autoLay').onclick=async()=>{pos={};for(let i=0;i<TABS.length;i++){const t=TABS[i],p=autoPos(i);try{await XB.setTablet({tablet_no:t.tablet_no,table_label:t.table_label,enabled:t.enabled,pos_x:p.x,pos_y:p.y});}catch(e){}}tick();};
+async function setAll(v){for(const t of TABS){if(v&&!tabSelected(t))continue;pend[t.tablet_no]={v:v,until:Date.now()+12000};try{await XB.cmdTablet(t.tablet_no,v?'show':'hide!');sent[t.tablet_no]=Date.now();}catch(e){delete pend[t.tablet_no];toast('실패: '+e.message);break;}}toast(v?'전체 띄우기 보냄':'모든 태블릿 → 주문 화면 (게임 중이어도 바로 닫아요)');renderBoard();tick();}
+$('allOn').onclick=()=>setAll(true);$('allOff').onclick=()=>{setAll(false);};
+
+/* ---------- 오늘 목록(오른쪽) ---------- */
+function renderFeed(){
+ const L=$('list'),WL=wlist();$('feedCnt').textContent=WL.length+'건';
+ if(!WL.length){L.innerHTML='<div style="padding:30px 10px;text-align:center;color:var(--mut)">아직 성공한 테이블이 없어요</div>';return;}
+ L.innerHTML=WL.map(w=>{
+  const on=w.mode==='onsite';let tags='',ln='';
+  if(on){tags=w.served_at?'<span class="tag g">증정 완료 '+hhmm(w.served_at)+'</span>':'<span class="tag r">증정 대기</span>';ln='현장 증정 · No.'+esc(w.serial);}
+  else if(w.mode==='capture'){tags='<span class="tag g">캡처 '+esc(w.code||'')+'</span>';ln='쿠폰 캡처 · No.'+esc(w.serial)+(games().length>1?' · '+esc(gName(w.game)):'');}
+  else if(w.claimed_at){tags='<span class="tag g">쿠폰 '+esc(w.code)+'</span>'+(w.sent_at?'<span class="tag b">발송 표시</span>':'')+(w.used_at?'<span class="tag a">사용됨</span>':'');
+   ln=esc(maskName(w.name))+' · '+esc(maskPhone(w.phone))+' · No.'+esc(w.serial);}
+  else{tags='<span class="tag a">정보 입력 중/미입력</span>';ln='쿠폰 발송 · No.'+esc(w.serial);}
+  return '<div class="row'+(on&&!w.served_at?' wait':'')+'"><div class="h"><span class="tb">'+esc(tableText(w.table_label||w.tablet_no))+'</span><span class="pz">'+esc(w.prize_name||'')+'</span><span class="tm">'+hhmm(w.won_at)+'</span></div><div class="ln">'+tags+'</div><div class="ln">'+ln+'</div>'+(on&&!w.served_at?'<div style="margin-top:6px"><button class="pri" data-serve="'+w.id+'">증정 완료</button></div>':'')+'</div>';}).join('');
+ L.querySelectorAll('[data-serve]').forEach(b=>b.onclick=async()=>{try{await XB.winUpdate(+b.dataset.serve,{served:true});closeAlert(+b.dataset.serve);tick();}catch(e){toast('실패: '+e.message);}});
+}
+
+/* ---------- 오늘 성공 고객 · 엑셀 ---------- */
+function customers(){return wlist().filter(w=>w.mode==='coupon'&&w.claimed_at&&w.phone).sort((a,b)=>new Date(a.won_at)-new Date(b.won_at));}
+function couponName(w){return w.prize_name||'';}
+function renderSum(){
+ const C=customers(),cnt={};C.forEach(w=>cnt[w.prize_name]=(cnt[w.prize_name]||0)+1);
+ $('sumDate').textContent=ymd(bizStart())+' 영업일';
+ const WL=wlist(),unclaimed=WL.filter(w=>w.mode==='coupon'&&!w.claimed_at).length,onsite=WL.filter(w=>w.mode==='onsite').length,capt=WL.filter(w=>w.mode==='capture').length;
+ $('sumStat').innerHTML='<span class="tag g">쿠폰 발급 '+C.length+'명</span>'+Object.keys(cnt).map(k=>'<span class="tag b">'+esc(k)+' '+cnt[k]+'</span>').join('')+(unclaimed?'<span class="tag a">정보 미입력 '+unclaimed+'</span>':'')+(onsite?'<span class="tag">현장 증정 '+onsite+'</span>':'')+(capt?'<span class="tag b">쿠폰 캡처 '+capt+'</span>':'')+'<span class="tag">전체 성공 '+WL.length+'</span>';
+ $('sumBody').innerHTML=C.length?C.map(w=>'<tr><td><input type="checkbox" data-sent="'+w.id+'" '+(w.sent_at?'checked':'')+' style="width:auto"></td><td>'+esc(w.name)+'</td><td>'+esc(fmtPhone(w.phone))+'</td><td>'+hhmm(w.won_at)+'</td><td>'+esc(w.table_label||w.tablet_no)+'</td><td>'+esc(w.tablet_no)+'</td><td>'+esc(couponName(w))+'</td><td>'+esc(w.code)+'</td><td>'+(w.consent_marketing?'동의':'-')+'</td></tr>').join(''):'<tr><td colspan="9" style="text-align:center;color:var(--mut);padding:24px">오늘 쿠폰을 발급받은 고객이 아직 없어요</td></tr>';
+ $('sumBody').querySelectorAll('[data-sent]').forEach(c=>c.onchange=async()=>{try{await XB.winUpdate(+c.dataset.sent,{sent:c.checked});}catch(e){toast('실패: '+e.message);}});
+}
+$('btnSum').onclick=()=>{renderSum();$('mSum').classList.add('on');};
+$('xl').onclick=()=>{
+ const C=customers();if(!C.length){toast('내려받을 고객이 없어요');return;}
+ const rows=[['이름','전화번호','성공시간','테이블번호','태블릿번호','쿠폰종류','쿠폰번호','유효기간','선택수신동의']];
+ C.forEach(w=>rows.push([w.name,fmtPhone(w.phone),ymdhm(w.won_at),w.table_label||w.tablet_no,w.tablet_no,couponName(w),w.code,w.expires_at?ymd(w.expires_at):'',w.consent_marketing?'동의':'미동의']));
+ const bytes=XLSXW.build(rows,'성공 고객',[12,16,18,12,12,16,12,14,12]);
+ const d=bizStart(),fn='페리산타_성공고객_'+d.getFullYear()+z2(d.getMonth()+1)+z2(d.getDate())+'.xlsx';
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download=fn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+ toast(fn+' 저장');};
+$('markAll').onclick=async()=>{const C=customers().filter(w=>!w.sent_at);if(!C.length){toast('이미 모두 표시돼 있어요');return;}if(!confirm(C.length+'명을 "발송 완료"로 표시할까요?'))return;
+ for(const w of C){try{await XB.winUpdate(w.id,{sent:true});}catch(e){}}toast('표시 완료');tick();};
+let lastSumDay='';
+function sumCheck(){const st=lsGet().sumTime||'23:00';const n=new Date(),hm=z2(n.getHours())+':'+z2(n.getMinutes());const day=ymd(bizStart());
+ if(hm>=st&&hm<'23:59'&&lastSumDay!==day&&started){lastSumDay=day;lsSet({sumDay:day});renderSum();$('mSum').classList.add('on');chime(true);}}
+
+/* ---------- 쿠폰 사용 조회 ---------- */
+$('btnFind').onclick=()=>{$('mFind').classList.add('on');$('fq').focus();};
+async function doFind(){
+ const q=$('fq').value.trim();if(q.length<2){$('fres').innerHTML='<p style="color:var(--mut)">2글자 이상 입력해 주세요</p>';return;}
+ try{const r=await XB.find(q);
+  $('fres').innerHTML=r.length?r.map(w=>{const exp=w.expires_at&&new Date(w.expires_at).getTime()<Date.now()+offset,used=!!w.used_at;
+   const stt=used?'<span class="tag a">사용 완료 '+ymdhm(w.used_at)+'</span>':exp?'<span class="tag r">기간 만료</span>':'<span class="tag g">사용 가능</span>';
+   return '<div class="row"><div class="h"><span class="tb">'+esc(w.name)+'</span><span class="pz">'+esc(w.prize_name)+'</span><span class="tm">'+esc(w.code)+'</span></div><div class="ln">'+stt+' 전화 뒷자리 '+esc(String(w.phone||'').slice(-4))+' · 발급 '+ymdhm(w.claimed_at)+' · 유효 ~'+(w.expires_at?ymd(w.expires_at):'-')+'</div><div style="margin-top:6px">'+(used?'<button data-undo="'+w.id+'">사용 취소</button>':'<button class="pri" data-use="'+w.id+'" '+(exp?'disabled':'')+'>사용 처리</button>')+'</div></div>';}).join(''):'<p style="color:var(--mut)">일치하는 쿠폰이 없어요</p>';
+  $('fres').querySelectorAll('[data-use]').forEach(b=>b.onclick=async()=>{try{await XB.winUpdate(+b.dataset.use,{used:true});toast('사용 처리했어요');doFind();tick();}catch(e){toast('실패: '+e.message);}});
+  $('fres').querySelectorAll('[data-undo]').forEach(b=>b.onclick=async()=>{if(!confirm('사용 처리를 취소할까요?'))return;try{await XB.winUpdate(+b.dataset.undo,{used:false});doFind();tick();}catch(e){toast('실패: '+e.message);}});
+ }catch(e){$('fres').innerHTML='<p style="color:var(--red2)">'+esc(e.message)+'</p>';}}
+$('fgo').onclick=doFind;$('fq').addEventListener('keydown',e=>{if(e.key==='Enter')doFind();});
+
+/* ---------- 설정 ---------- */
+let SC=null;
+$('btnSet').onclick=async()=>{try{SC=await XB.getConfig();}catch(e){toast('설정을 불러오지 못했어요: '+e.message);return;}
+ SC=JSON.parse(JSON.stringify(SC));drawSet();$('mSet').classList.add('on');};
+function drawSet(){
+ [...$('sMode').children].forEach(b=>b.classList.toggle('on',b.dataset.v===SC.mode));
+ $('sCap').value=SC.capture_msg||'';drawGames();$('sExp').value=SC.expiry_days;$('sRet').value=SC.retention_days;$('sRst').value=SC.reset_hours;$('sCamp').value=SC.campaign;$('sNotes').value=(SC.notes||[]).join('\n');
+ $('sSum').value=lsGet().sumTime||'23:00';
+ $('sCoupons').innerHTML=SC.coupons.map((c,i)=>'<div class="cp" data-i="'+i+'"><div>'
+  +'<div class="f"><label>사용</label><input type="checkbox" class="c-on" '+(c.on!==false?'checked':'')+' style="width:auto"></div>'
+  +'<div class="f"><label>쿠폰 이름</label><input class="c-name" value="'+esc(c.name)+'"></div>'
+  +'<div class="f"><label>매장 재고</label><input class="c-stock" type="number" min="0" placeholder="제한 없음" value="'+(c.stock==null?'':c.stock)+'" style="width:110px"><small>지금부터 이 개수만큼 증정 · 다 나가면 자동으로 꺼져요</small></div>'
+  +'<div class="f"><label>번호 앞 글자</label><input class="c-pre" value="'+esc(c.prefix)+'" maxlength="4" style="width:90px"><small>예: dk → dk9915</small></div>'
+  +'<div class="f"><label>쿠폰 이미지</label><button class="c-up">이미지 올리기</button><button class="c-del">지우기</button><input type="file" class="c-file" accept="image/*" hidden></div>'
+  +'<div class="f"><label>번호 세로 위치</label><input type="range" class="c-y" min="40" max="98" value="'+(c.codeY==null?84:c.codeY)+'"></div>'
+  +'<div class="f"><label>번호 글자 크기</label><input type="range" class="c-sz" min="4" max="16" value="'+Math.round((c.codeSize||0.085)*100)+'"></div>'
+  +'<div class="f"><label>번호 글자색</label><input type="color" class="c-col" value="'+(c.codeColor||'#3a2a20')+'"></div>'
+  +'</div><div><div class="pv"></div><div style="font-size:12px;color:var(--mut);margin-top:4px">미리보기 (이미지 하단 빈 칸에 번호가 들어가요)</div></div></div>').join('');
+ SC.coupons.forEach((c,i)=>pv(i));
+ document.querySelectorAll('#sCoupons .cp').forEach(box=>{const i=+box.dataset.i,c=SC.coupons[i];
+  box.querySelector('.c-on').onchange=e=>c.on=e.target.checked;
+  box.querySelector('.c-name').oninput=e=>c.name=e.target.value;
+  box.querySelector('.c-stock').oninput=e=>{const v=e.target.value.trim();if(v===''){delete c.stock;delete c.stock_from;}else{c.stock=Math.max(0,parseInt(v)||0);c.stock_from=new Date().toISOString();if(c.stock>0)c.on=true;box.querySelector('.c-on').checked=c.on!==false;}};
+  box.querySelector('.c-pre').oninput=e=>{c.prefix=e.target.value.replace(/[^a-zA-Z]/g,'').toLowerCase();e.target.value=c.prefix;pv(i);};
+  box.querySelector('.c-y').oninput=e=>{c.codeY=+e.target.value;pv(i);};
+  box.querySelector('.c-sz').oninput=e=>{c.codeSize=+e.target.value/100;pv(i);};
+  box.querySelector('.c-col').oninput=e=>{c.codeColor=e.target.value;pv(i);};
+  box.querySelector('.c-up').onclick=()=>box.querySelector('.c-file').click();
+  box.querySelector('.c-del').onclick=()=>{c.img=null;pv(i);};
+  box.querySelector('.c-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{c.img=await shrink(f);pv(i);}catch(er){toast('이미지를 읽지 못했어요');}};});
+}
+function pv(i){
+ const c=SC.coupons[i],box=document.querySelector('#sCoupons .cp[data-i="'+i+'"] .pv');if(!box)return;
+ box.innerHTML=c.img?'<img>':'<div class="ph">이미지를 올리지 않으면<br>태블릿의 기본 쿠폰 디자인이 나와요</div>';
+ const cd=document.createElement('span');cd.className='cd';cd.textContent=(c.prefix||'')+'9915';box.appendChild(cd);
+ const place=()=>{const h=box.clientHeight||200;cd.style.top=(c.codeY==null?84:c.codeY)+'%';cd.style.fontSize=Math.round(h*(c.codeSize||0.085))+'px';cd.style.color=c.codeColor||'#3a2a20';};
+ if(c.img){const im=box.querySelector('img');im.onload=place;im.src=c.img;}place();
+}
+function shrink(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{
+ const k=Math.min(1,720/im.naturalWidth,900/im.naturalHeight),w=Math.round(im.naturalWidth*k),h=Math.round(im.naturalHeight*k);
+ const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(im,0,0,w,h);
+ let u=cv.toDataURL('image/webp',0.86);if(!/^data:image\/webp/.test(u))u=cv.toDataURL('image/jpeg',0.86);res(u);};im.src=fr.result;};fr.readAsDataURL(file);});}
+$('sMode').onclick=e=>{const b=e.target.closest('button');if(!b)return;SC.mode=b.dataset.v;[...$('sMode').children].forEach(x=>x.classList.toggle('on',x===b));};
+$('sSave').onclick=async()=>{
+ const num=(id,d,lo,hi)=>{const v=parseFloat($(id).value);return isNaN(v)?d:Math.min(hi,Math.max(lo,v));};
+ SC.expiry_days=Math.round(num('sExp',30,1,365));SC.retention_days=Math.round(num('sRet',30,0,365));SC.reset_hours=num('sRst',2,0.5,24);SC.campaign=($('sCamp').value.trim()||'xmas2026');
+ SC.capture_msg=$('sCap').value.trim()||XB.DEF_CONFIG.capture_msg;
+ SC.notes=$('sNotes').value.split('\n').map(s=>s.trim()).filter(Boolean);
+ if(!SC.coupons.some(c=>c.on!==false)){toast('쿠폰은 하나 이상 사용해야 해요');return;}
+ if(SC.coupons.some(c=>!c.prefix)){toast('쿠폰 번호 앞 글자를 넣어 주세요 (영문)');return;}
+ const t=$('sSum').value||'23:00';lsSet({sumTime:t});
+ delete SC._ver;
+ try{await XB.setConfig(SC);toast('저장했어요 · 태블릿에는 5초 안에 반영돼요');$('mSet').classList.remove('on');CONF._ver=-1;tick();}catch(e){toast('저장 실패: '+e.message);}};
+$('purge').onclick=async()=>{if(!confirm('쿠폰 유효기간 + 보유기간이 지난 고객의 이름·전화번호를 지울까요?\n(통계는 남아요)'))return;try{const r=await XB.purge();toast('파기 '+(r&&r.cleared!=null?r.cleared:0)+'건');tick();}catch(e){toast('실패: '+e.message);}};
+
+function drawGames(){
+ if(!Array.isArray(SC.games)||!SC.games.length)SC.games=JSON.parse(JSON.stringify(XB.DEF_CONFIG.games));
+ $('sGames').innerHTML=SC.games.map((g,i)=>'<div class="f" data-i="'+i+'" style="flex-wrap:wrap;gap:6px"><input type="checkbox" class="g-on" '+(g.enabled!==false?'checked':'')+' style="width:auto" title="사용"><input class="g-name" value="'+esc(g.name)+'" style="width:190px" placeholder="게임 이름"><small>ID '+esc(g.id)+'</small><input class="g-camp" value="'+esc(g.campaign||'')+'" style="width:130px" placeholder="캠페인"><button class="g-del">삭제</button></div>').join('')+'<div class="f"><button id="gAdd">＋ 게임 추가</button><small>켜진 게임이 2개 이상이면 태블릿 홈에서 게임을 고르게 돼요. 새 게임 파일은 "게임 업데이트"에서 올려요.</small></div>';
+ $('sGames').querySelectorAll('[data-i]').forEach(r=>{const g=SC.games[+r.dataset.i];
+  r.querySelector('.g-on').onchange=e=>g.enabled=e.target.checked;
+  r.querySelector('.g-name').oninput=e=>g.name=e.target.value;
+  r.querySelector('.g-camp').oninput=e=>g.campaign=e.target.value.trim();
+  r.querySelector('.g-del').onclick=()=>{if(SC.games.length<2){toast('게임은 하나 이상 필요해요');return;}SC.games.splice(+r.dataset.i,1);drawGames();};});
+ $('gAdd').onclick=()=>{const id=prompt('새 게임 ID (영문 소문자, 예: bingo)');if(!id)return;const k=id.trim().toLowerCase().replace(/[^a-z0-9_]/g,'');if(!k||SC.games.some(g=>g.id===k)){toast('사용할 수 없는 ID예요');return;}
+  SC.games.push({id:k,name:k,enabled:false,campaign:k+'2026',own:false});drawGames();};
+}
+document.querySelectorAll('[data-cl]').forEach(b=>b.onclick=()=>$(b.dataset.cl).classList.remove('on'));
+
+/* ---------- 1개월 목록 ---------- */
+let MDAYS=1,MROWS=[];
+const KIND={coupon:'쿠폰 발송',capture:'쿠폰 캡처',onsite:'현장 증정'};
+async function loadMonth(){
+ const from=new Date(bizStart().getTime()-(MDAYS-1)*86400000).toISOString();
+ try{MROWS=await XB.wins(from,null);}catch(e){toast('불러오기 실패: '+e.message);MROWS=[];}
+ renderMonth();}
+function mFiltered(){const g=$('mGame').value,k=$('mKind').value;return MROWS.filter(w=>(!g||(w.game||games()[0].id)===g)&&(!k||w.mode===k)).sort((a,b)=>new Date(b.won_at)-new Date(a.won_at));}
+function renderMonth(){
+ const g=$('mGame');if(!g._f){g._f=1;g.innerHTML='<option value="">전체 게임</option>'+games().map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');}
+ const L=mFiltered();const pi=L.filter(w=>w.phone).length;
+ $('mStat').textContent='총 '+L.length+'건 · 개인정보 '+pi+'건';
+ $('mBody').innerHTML=L.length?L.map(w=>'<tr><td>'+ymdhm(w.won_at)+'</td><td>'+esc(gName(w.game))+'</td><td>'+esc(KIND[w.mode]||w.mode)+'</td><td>'+esc(w.serial)+'</td><td>'+esc(w.code||'-')+'</td><td>'+esc(w.prize_name||'')+'</td><td>'+esc(w.table_label||w.tablet_no)+'</td><td>'+esc(w.name||'-')+'</td><td>'+esc(w.phone?fmtPhone(w.phone):'-')+'</td><td>'+(w.phone?(w.consent_marketing?'동의':'-'):'')+'</td><td>'+(w.used_at?'사용 '+hhmm(w.used_at):'')+'</td></tr>').join(''):'<tr><td colspan="11" style="color:var(--mut);text-align:center;padding:20px">기록이 없어요</td></tr>';
+}
+$('btnMonth').onclick=()=>{$('mGame')._f=0;$('mMonth').classList.add('on');loadMonth();};
+$('mRange').onclick=e=>{const b=e.target.closest('button');if(!b)return;MDAYS=+b.dataset.d;[...$('mRange').children].forEach(x=>x.classList.toggle('on',x===b));loadMonth();};
+$('mGame').onchange=renderMonth;$('mKind').onchange=renderMonth;
+$('mXl').onclick=()=>{const L=mFiltered();if(!L.length){toast('내려받을 기록이 없어요');return;}
+ const rows=[['일시','게임','보상방식','일련번호','쿠폰번호','쿠폰종류','테이블번호','태블릿번호','이름','전화번호','선택수신동의','유효기간','사용시간']];
+ L.forEach(w=>rows.push([ymdhm(w.won_at),gName(w.game),KIND[w.mode]||w.mode,w.serial,w.code||'',w.prize_name||'',w.table_label||w.tablet_no,w.tablet_no,w.name||'',w.phone?fmtPhone(w.phone):'',w.phone?(w.consent_marketing?'동의':'미동의'):'',w.expires_at?ymd(w.expires_at):'',w.used_at?ymdhm(w.used_at):'']));
+ const bytes=XLSXW.build(rows,'발급 목록',[17,16,12,10,12,16,12,12,12,16,12,14,17]);
+ const d=new Date(),fn='페리산타_발급목록_'+d.getFullYear()+z2(d.getMonth()+1)+z2(d.getDate())+'_'+MDAYS+'일.xlsx';
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download=fn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);toast(fn+' 저장');};
+
+/* ---------- 게임 업데이트(OTA) ---------- */
+let GHTML=null;
+function gFill(){const el=$('gSel');el.innerHTML=games().map(g=>'<option value="'+esc(g.id)+'">'+esc(g.name)+'</option>').join('');}
+async function gLoad(){
+ try{const L=await XB.gameList($('gSel').value);
+  $('gBody').innerHTML=L.length?L.map(b=>'<tr><td>'+ymdhm(b.created_at)+'</td><td>'+esc(b.note||'')+'</td><td>'+Math.round(b.size/1024)+'KB</td><td>'+(b.active?'<span class="tag g">적용 중</span>':'')+'</td><td>'+(b.active?'':'<button data-act="'+b.id+'">적용</button>')+'</td></tr>').join(''):'<tr><td colspan="5" style="color:var(--mut);text-align:center;padding:14px">올린 버전이 없어요 (앱 안에 들어있는 기본 버전 사용 중)</td></tr>';
+  $('gBody').querySelectorAll('[data-act]').forEach(b=>b.onclick=async()=>{try{await XB.gameActivate(+b.dataset.act);toast('적용했어요 · 태블릿에 곧 반영돼요');gLoad();}catch(e){toast('실패: '+e.message);}});
+ }catch(e){$('gBody').innerHTML='<tr><td colspan="5" style="color:var(--red2)">'+esc(/xmas_admin_game|schema cache|PGRST/.test(e.message)?'서버에 v7 SQL 패치(xmas_patch_v7.sql)를 먼저 실행해 주세요':e.message)+'</td></tr>';}}
+$('btnGames').onclick=async()=>{try{CONF=Object.assign(await XB.getConfig(),{_ver:CONF._ver});}catch(e){}gFill();GHTML=null;$('gFn').textContent='';$('mGames').classList.add('on');gLoad();};
+$('gSel').onchange=gLoad;
+$('gPick').onclick=()=>$('gFile').click();
+$('gFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{GHTML=String(fr.result);$('gFn').textContent=f.name+' ('+Math.round(GHTML.length/1024)+'KB)';};fr.readAsText(f,'utf-8');};
+$('gUp').onclick=async()=>{if(!GHTML){toast('게임 HTML 파일을 먼저 골라 주세요');return;}
+ if(!/<canvas|<body/i.test(GHTML)||GHTML.length<2000){toast('게임 파일이 맞는지 확인해 주세요');return;}
+ if(!confirm('"'+gName($('gSel').value)+'" 새 버전을 올리고 모든 태블릿에 적용할까요?'))return;
+ try{await XB.gamePut($('gSel').value,GHTML,$('gNote').value.trim());toast('올렸어요 · 태블릿이 5초 안에 내려받아요');GHTML=null;$('gFn').textContent='';$('gNote').value='';gLoad();}catch(e){toast('실패: '+e.message);}};
+$('gClr').onclick=async()=>{if(!confirm('올린 버전을 모두 끄고 앱에 내장된 기본 버전으로 되돌릴까요?'))return;try{await XB.gameClear($('gSel').value);toast('되돌렸어요');gLoad();}catch(e){toast('실패: '+e.message);}};
+</script>
+</body>
+</html>
