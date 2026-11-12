@@ -107,7 +107,7 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;p
 </div></div>
 
 <div id="top">
- <div class="brand">🎄 페리 프로모션 관제 <small style="font-size:12px;font-weight:400;color:var(--mut)">v10</small></div>
+ <div class="brand">🎄 페리 프로모션 관제 <small style="font-size:12px;font-weight:400;color:var(--mut)">v11</small></div>
  <span id="modeBadge" class="badge b-co"></span><span id="conn" class="badge b-on"></span>
  <div class="sp"></div>
  <button id="btnSound" class="need">🔇 소리 켜기</button>
@@ -123,7 +123,7 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;p
 <main>
  <section id="board">
   <div class="bhead"><b>태블릿 배치판</b><span id="cnt" class="hint"></span><span class="hint">· 카드 윗줄을 잡고 끌어서 옮겨요</span><div class="sp"></div><select id="gFilter" title="게임별 보기" style="width:auto"></select>
-   <label class="hint" style="margin-left:6px">운영 게임</label><select id="actGame" style="width:auto"><option value="all">모든 게임</option><option value="xmas">산타 굴뚝배달</option><option value="sled">PELI SLIDE</option><option value="tree">페리 크리스마스</option><option value="catch">떨어지는 선물 받기</option><option value="off">게임 끄기</option></select><button id="allOn">전체 띄우기</button><button id="allOff" class="force">🧾 모두 주문화면으로</button><button id="autoLay">정렬</button><button class="pri" id="addTab">＋ 태블릿 추가</button></div>
+   <label class="hint" style="margin-left:6px">운영 게임</label><select id="actGame" style="width:auto"><option value="all">모든 게임</option><option value="xmas">산타 굴뚝배달</option><option value="sled">PELI SLIDE</option><option value="tree">페리 크리스마스</option><option value="catch">떨어지는 선물 받기</option><option value="run">페리치킨런</option><option value="off">게임 끄기</option></select><button id="allOn">전체 띄우기</button><button id="allOff" class="force">🧾 모두 주문화면으로</button><button id="autoLay">정렬</button><button class="pri" id="addTab">＋ 태블릿 추가</button></div>
   <div id="stockBar"></div><div id="floor"></div>
  </section>
  <aside id="feed"><div class="fh"><b>실시간 · 오늘 성공</b><span id="feedCnt" class="hint"></span></div><div id="list"></div></aside>
@@ -252,7 +252,7 @@ const XB=(function(){
  const L={
   poll(tab,state,meta){
    const d=ldb();tab=String(tab).trim();
-   const t=d.tablets[tab]||(d.tablets[tab]={tablet_no:tab,table_label:/^[STC]\d+$/.test(tab)?tab.slice(1):null,enabled:true,locked_until:null,pos_x:null,pos_y:null,last_seen:null,state:null});
+   const t=d.tablets[tab]||(d.tablets[tab]={tablet_no:tab,table_label:/^[STCR]\d+$/.test(tab)?tab.slice(1):null,enabled:true,locked_until:null,pos_x:null,pos_y:null,last_seen:null,state:null});
    t.last_seen=nowIso();if(state)t.state=state;if(meta)t.meta=meta;sdb(d);const c=lcf();
    return{enabled:t.enabled,locked:lockedNow(t),locked_until:t.locked_until,table_label:t.table_label||t.tablet_no,mode:c.config.mode||'coupon',cfg_ver:c.ver,cmd:t.cmd||null,cmd_seq:t.cmd_seq||0,builds:builds(d),server_time:nowIso()};
   },
@@ -456,7 +456,7 @@ async function tick(){
  }catch(e){failCount++;$('conn').textContent='● 연결 끊김';$('conn').className='badge b-bad';
   if(failCount>=2){$('banner').style.display='block';$('banner').textContent='서버와 연결이 끊겼어요 ('+e.message+') — 자동으로 다시 시도 중';}}
 }
-const EXTRA_GAMES=[{id:'tree',name:'페리 크리스마스',enabled:true,own:false},{id:'catch',name:'떨어지는 선물 받기',enabled:true,own:false}];
+const EXTRA_GAMES=[{id:'tree',name:'페리 크리스마스',enabled:true,own:false},{id:'catch',name:'떨어지는 선물 받기',enabled:true,own:false},{id:'run',name:'페리치킨런',enabled:true,own:false}];
 function games(){const b=(CONF.games&&CONF.games.length)?CONF.games:XB.DEF_CONFIG.games;return b.concat(EXTRA_GAMES.filter(e=>!b.some(g=>g.id===e.id)));}
 function gName(id){const g=games().find(x=>x.id===id);return g?g.name:(id||'');}
 function fillGF(){const el=$('gFilter');const sig=games().map(g=>g.id+g.name).join('|');if(el._sig===sig)return;el._sig=sig;
@@ -473,7 +473,7 @@ function newWin(w){
  el.innerHTML='<div class="em">🎉</div><div style="flex:1"><div class="big">프로모션 성공! '+esc(tableText(w.table_label||w.tablet_no))+'</div><div class="sub">'+esc(w.prize_name||'')+' · '+(onsite?'현장에서 증정해 주세요':w.mode==='capture'?'쿠폰 캡처 안내 중':'쿠폰 발급 진행 중')+' · No.'+esc(w.serial)+'</div></div><button>'+(onsite?'증정 완료':'확인')+'</button>';
  el.querySelector('button').onclick=async()=>{if(onsite){try{await XB.winUpdate(w.id,{served:true});}catch(e){toast('저장 실패: '+e.message);return;}}closeAlert(w.id);tick();};
  $('alerts').appendChild(el);alertsOpen.set(w.id,el);chime(true);updTitle();
- {const tl=tableText(w.table_label||numOf(w.tablet_no));const gn={sled:'펠리 슬라이드',tree:'페리 크리스마스',catch:'선물 받기'}[w.game]||'굴뚝배달';say(tl+' '+gn+' 성공! '+(w.prize_name||'')+(onsite?', 현장 증정해 주세요':''));notify('프로모션 성공 · '+tl,gn+' · '+(w.prize_name||''));stockAt=0;}
+ {const tl=tableText(w.table_label||numOf(w.tablet_no));const gn={sled:'펠리 슬라이드',tree:'페리 크리스마스',catch:'선물 받기',run:'페리치킨런'}[w.game]||'굴뚝배달';say(tl+' '+gn+' 성공! '+(w.prize_name||'')+(onsite?', 현장 증정해 주세요':''));notify('프로모션 성공 · '+tl,gn+' · '+(w.prize_name||''));stockAt=0;}
  if(!onsite)setTimeout(()=>closeAlert(w.id),15000);
 }
 function closeAlert(id){const e=alertsOpen.get(id);if(e){e.remove();alertsOpen.delete(id);}updTitle();}
@@ -483,13 +483,13 @@ function remind(){if(!sound)return;const now=Date.now()+offset;
 
 /* ---------- 게임 선택 · 명령 확인 ---------- */
 const sent={};
-const numOf=no=>String(no).replace(/^[STC](?=\d)/,'');
+const numOf=no=>String(no).replace(/^[STCR](?=\d)/,'');
 const labelOf=t=>t.table_label||numOf(t.tablet_no);
-function gameOfTab(t){const m=/^([STC])\d/.exec(String(t.tablet_no));return m?{S:'sled',T:'tree',C:'catch'}[m[1]]:'xmas';}
+function gameOfTab(t){const m=/^([STCR])\d/.exec(String(t.tablet_no));return m?{S:'sled',T:'tree',C:'catch',R:'run'}[m[1]]:'xmas';}
 function selFor(n){const tg=CONF.tablet_game||{};return tg[n]||CONF.active_game||'all';}
 function tabSelected(t){const g=selFor(numOf(t.tablet_no));return g==='all'||g===gameOfTab(t);}
 async function saveCfgPart(fn,msg){try{const c=JSON.parse(JSON.stringify(await XB.getConfig()));delete c._ver;fn(c);await XB.setConfig(c);CONF=Object.assign(c,{_ver:-1});toast(msg);tick();}catch(e){toast('저장 실패: '+e.message);}}
-async function setTableGame(n,v){await saveCfgPart(c=>{c.tablet_game=c.tablet_game||{};if(v)c.tablet_game[n]=v;else delete c.tablet_game[n];},n+'번 테이블 → '+({'':'기본',xmas:'굴뚝배달',sled:'썰매',tree:'페리 크리스마스',catch:'선물 받기',off:'게임 끄기'}[v])+' (5초 안에 반영)');}
+async function setTableGame(n,v){await saveCfgPart(c=>{c.tablet_game=c.tablet_game||{};if(v)c.tablet_game[n]=v;else delete c.tablet_game[n];},n+'번 테이블 → '+({'':'기본',xmas:'굴뚝배달',sled:'썰매',tree:'페리 크리스마스',catch:'선물 받기',run:'페리치킨런',off:'게임 끄기'}[v])+' (5초 안에 반영)');}
 $('actGame').onchange=async e=>{const v=e.target.value;await saveCfgPart(c=>{c.active_game=v;},'운영 게임: '+e.target.selectedOptions[0].textContent+' — 선택 안 된 앱은 자동으로 숨겨져요');};
 /* ---------- 재고 ---------- */
 let stockCnt={},stockAt=0;
@@ -537,7 +537,7 @@ function renderBoard(){
 }
 function makeCard(t){
  const el=document.createElement('div');el.className='tab';el.dataset.no=t.tablet_no;
- el.innerHTML='<div class="scr"><div class="r1"><span class="dot"></span>'+({sled:'🛷 SLIDE ',tree:'🎄 트리 ',catch:'🎁 선물 ',xmas:'🎅 산타 '}[gameOfTab(t)])+esc(t.tablet_no)+'<button class="x" title="삭제">×</button></div><input class="lab" maxlength="8" aria-label="테이블 번호"><div class="st"></div><div class="gm" style="font-size:11px;color:var(--mut)"></div><select class="tg" title="이 테이블 게임"><option value="">기본(운영 게임)</option><option value="xmas">굴뚝배달</option><option value="sled">PELI SLIDE</option><option value="tree">페리 크리스마스</option><option value="catch">선물 받기</option><option value="off">끄기</option></select><div class="ak"></div><button class="rs">🔁 다시 도전 (잠금 해제)</button><div class="r3"><span class="swl"></span><button class="sw" aria-label="앱 띄우기/숨기기"></button></div></div>';
+ el.innerHTML='<div class="scr"><div class="r1"><span class="dot"></span>'+({sled:'🛷 SLIDE ',tree:'🎄 트리 ',catch:'🎁 선물 ',run:'🐔 치킨런 ',xmas:'🎅 산타 '}[gameOfTab(t)])+esc(t.tablet_no)+'<button class="x" title="삭제">×</button></div><input class="lab" maxlength="8" aria-label="테이블 번호"><div class="st"></div><div class="gm" style="font-size:11px;color:var(--mut)"></div><select class="tg" title="이 테이블 게임"><option value="">기본(운영 게임)</option><option value="xmas">굴뚝배달</option><option value="sled">PELI SLIDE</option><option value="tree">페리 크리스마스</option><option value="catch">선물 받기</option><option value="run">치킨런</option><option value="off">끄기</option></select><div class="ak"></div><button class="rs">🔁 다시 도전 (잠금 해제)</button><div class="r3"><span class="swl"></span><button class="sw" aria-label="앱 띄우기/숨기기"></button></div></div>';
  const find=()=>TABS.find(x=>x.tablet_no===t.tablet_no)||t;
  const savePos=async()=>{const c=find(),p=pos[t.tablet_no];if(!p)return;try{await XB.setTablet({tablet_no:t.tablet_no,table_label:c.table_label,enabled:c.enabled,pos_x:p.x,pos_y:p.y});}catch(e){toast('위치 저장 실패');}};
  el.querySelector('.sw').onclick=async e=>{e.stopPropagation();const c=find();const nv=!isVis(c);pend[t.tablet_no]={v:nv,until:Date.now()+12000};renderBoard();
